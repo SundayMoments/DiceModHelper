@@ -4,13 +4,17 @@ from lxml import etree
 import tkinter as tk
 import pyperclip
 import uuid
-
 from tkinter import (
     ttk,
     messagebox,
     filedialog,
     )
 
+from LocaConversion import (
+    save,
+    load,
+    LocaFormat
+)
 def create_directories(output_directory, folder_name):
     directories = [
         f'{output_directory}/Localization/English',
@@ -22,17 +26,21 @@ def create_directories(output_directory, folder_name):
     for directory in directories:
         try:
             os.makedirs(directory)
-            output_terminal.insert('end', f"Directory created: {directory}\n")
+            write_to_terminal(f"Directory created: {directory}")
         except Exception as e:
-            output_terminal.insert('end', f"Error creating directory {directory}: {str(e)}\n")
+            write_to_terminal(f"Error creating directory {directory}: {str(e)}")
 
 def write_file(file_path, content):
     try:
         with open(file_path, 'wb') as file:
             file.write(content)
-        output_terminal.insert('end', f"File written: {file_path}\n")
+        write_to_terminal(f"File written: {file_path}")
     except Exception as e:
-        output_terminal.insert('end', f"Error writing file {file_path}: {str(e)}\n")
+        write_to_terminal(f"Error writing file {file_path}: {str(e)}")
+
+def write_to_terminal(message):
+    output_terminal.insert(tk.END, message + "\n")
+    output_terminal.see(tk.END)  # Scroll to the last line
 
 def generate_folder_name_xml_content(HandName, ModNameGame, HandDesc, ModDescGame):
     content_list = etree.Element("contentList", date="28/12/2022 10:15")
@@ -208,6 +216,27 @@ def update_handle2():
 def update_mod_uuid():
     mod_uuid_var.set(generate_guid())
 
+def convert_xml_to_loca():
+    try:
+        file_path = os.path.join(output_dir_var.get(), 'Localization', 'English', f'{folder_name_var.get()}.xml')
+        xml_path = file_path
+        loca_path = file_path.replace('.xml', '.loca')
+
+        # Read the XML file
+        resource = load(xml_path, LocaFormat.XML)
+
+        # Write the .loca file
+        save(resource, loca_path, LocaFormat.LOCA)
+
+        # Log the success message in the output terminal
+        write_to_terminal(f"File converted: {xml_path} to {loca_path}")
+
+        messagebox.showinfo("Success", "Converted XML to .loca successfully!")
+    except Exception as e:
+        # Display the error message in the output terminal
+        write_to_terminal(f"An error occurred: {str(e)}")
+        messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
 # Create the main window
 root = tk.Tk()
 root.title("Diceset Mod Generator")
@@ -281,14 +310,14 @@ ttk.Button(root, text="Browse", command=select_output_dir).grid(row=row, column=
 row += 1
 
 # Generate button
-generate_button = ttk.Button(root, text="Generate", command=generate_files)
+generate_button = ttk.Button(root, text="Build", command=generate_files)
 generate_button.grid(row=row, column=1, pady=10)  # Centered the Generate button
 
 # Button row under "Generate" button
 row += 1
 ttk.Button(root, text="Open Output Directory", command=open_dice_sets_folder).grid(row=row, column=0, padx=5)
 ttk.Button(root, text="Open Localization Directory", command=open_localization_folder).grid(row=row, column=1, padx=5)
-ttk.Button(root, text="Copy Localization Path", command=copy_localization_path).grid(row=row, column=2, padx=5)
+ttk.Button(root, text="Convert XML to .loca", command=convert_xml_to_loca).grid(row=row, column=2, padx=5)
 
 row += 1
 ttk.Button(root, text="Open .DDS Directory", command=open_dds_folder).grid(row=row, column=1, padx=5)
