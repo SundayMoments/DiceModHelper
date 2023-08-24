@@ -5,7 +5,7 @@ Repository for the "Dice Mod Helper" on nexusmods.com
 https://www.nexusmods.com/baldursgate3/mods/1397
 
 Created by: 
-**SeanCconnerX0**
+**SeanConnerX0**
 
-The .xml and .lsx functions were built using templates from this mod by Korriik:
+The .xml and .lsx functions were built using templates from this mod by Koriik:
 https://www.nexusmods.com/baldursgate3/mods/802
