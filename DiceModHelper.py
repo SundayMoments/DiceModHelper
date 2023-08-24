@@ -3,6 +3,7 @@ import os
 from lxml import etree
 import tkinter as tk
 import pyperclip
+import uuid
 
 from tkinter import (
     ttk,
@@ -38,8 +39,6 @@ def generate_folder_name_xml_content(HandName, ModNameGame, HandDesc, ModDescGam
     etree.SubElement(content_list, "content", contentuid=HandName, version="1").text = ModNameGame
     etree.SubElement(content_list, "content", contentuid=HandDesc, version="1").text = ModDescGame
     return etree.tostring(content_list, encoding="utf-8", pretty_print=True)
-
-from lxml import etree
 
 def generate_custom_dice_lsx_content(FolderName, HandName, HandDesc, ModUUID):
     save = etree.Element("save")
@@ -193,6 +192,22 @@ def copy_localization_path():
     pyperclip.copy(file_path)  # Copy to clipboard
     messagebox.showinfo("Success", "Path copied to clipboard!")
 
+def generate_guid():
+    return str(uuid.uuid4())
+
+def generate_handle():
+    guid = uuid.uuid4()
+    return f"h{guid}".replace('-', 'g')
+
+def update_handle1():
+    hand_name_var.set(generate_handle())
+
+def update_handle2():
+    hand_desc_var.set(generate_handle())
+
+def update_mod_uuid():
+    mod_uuid_var.set(generate_guid())
+
 # Create the main window
 root = tk.Tk()
 root.title("Diceset Mod Generator")
@@ -236,13 +251,20 @@ labels = ["Folder Name:", "Handle - [1]:", "Handle - [2]:"]
 for idx, label in enumerate(labels):
     ttk.Label(root, text=label).grid(row=row, column=0, sticky='w', padx=5)
     ttk.Entry(root, textvariable=vars[idx]).grid(row=row, column=1, sticky='ew', padx=5)
+    if "Handle - [1]:" in label:
+        ttk.Button(root, text="Generate", command=update_handle1).grid(row=row, column=2, padx=5)
+    elif "Handle - [2]:" in label:
+        ttk.Button(root, text="Generate", command=update_handle2).grid(row=row, column=2, padx=5)
     row += 1
 
+# Add button to generate mod UUID
 row = create_section("In-Game Information", row)
 labels = ["Name:", "Description:", "Mod UUID:"]
 for idx, label in enumerate(labels):
     ttk.Label(root, text=label).grid(row=row, column=0, sticky='w', padx=5)
     ttk.Entry(root, textvariable=vars[idx + 3]).grid(row=row, column=1, sticky='ew', padx=5)
+    if "Mod UUID" in label:
+        ttk.Button(root, text="Generate", command=update_mod_uuid).grid(row=row, column=2, padx=5)
     row += 1
 
 row = create_section("Meta Information", row)
@@ -274,9 +296,16 @@ ttk.Button(root, text="Open .DDS Directory", command=open_dds_folder).grid(row=r
 # Make the second column stretchable
 root.grid_columnconfigure(1, weight=1)
 
-# Create a Text widget to serve as the output terminal
-output_terminal = tk.Text(root, wrap='word', height=10, bg="black", fg="lime")  # Terminal-like appearance
-output_terminal.grid(row=row+1, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+# Create a frame to hold the Text widget
+output_frame = ttk.Frame(root)
+output_frame.grid(row=row+1, column=0, columnspan=3, padx=5, pady=5, sticky='nsew')
+
+# Configure the row for the output_frame to expand
+root.grid_rowconfigure(row+1, weight=1)
+
+# Create a Text widget to serve as the output terminal inside the frame
+output_terminal = tk.Text(output_frame, wrap='word', height=9, bg="black", fg="lime")  # Terminal-like appearance
+output_terminal.pack(expand=True, fill='both')
 
 # Run the main loop
 root.mainloop()
