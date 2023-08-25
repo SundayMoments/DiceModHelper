@@ -20,7 +20,7 @@ from LocalizationMap import (
     languages,
 )
 
-VERSION = 'v1.3'
+VERSION = 'v2.0'
 
 def create_directories(output_directory, folder_name, language_cache):
     # Common directories
@@ -328,7 +328,8 @@ language_manager = LanguageManager()
 
 # Create the main window
 root = tk.Tk()
-root.title(f"Dice Mod Helper - Support me on Ko-Fi | SeanConnerX0 - {VERSION}")
+root.iconbitmap('SX-Icon.ico')
+root.title(f"Dice Mod Helper - Made by SeanConnerX0 - {VERSION}")
 
 # Retrieve the screen width and height
 screen_width = root.winfo_screenwidth()
@@ -353,7 +354,7 @@ language_code = languages[selected_language]
 language_codes_upper = [code.upper() for code in languages.values()]
 
 # Create a language selection combo box
-language_combobox = ttk.Combobox(root, textvariable=selected_language_var, values=language_codes_upper, width=3)
+language_combobox = ttk.Combobox(root, textvariable=selected_language_var, values=language_codes_upper, width=9)
 language_combobox.bind("<<ComboboxSelected>>", language_manager.on_language_change)
 language_combobox.grid(row=0, column=0, padx=5, sticky='w')  # Place it at the top
 language_combobox.set("EN")  # Set default value to English (two-letter code)
