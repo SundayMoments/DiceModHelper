@@ -20,6 +20,8 @@ from LocalizationMap import (
     languages,
 )
 
+from SX_Icon_base64 import SX_ICON_BASE64
+
 VERSION = 'v2.0'
 
 def create_directories(output_directory, folder_name, language_cache):
@@ -328,6 +330,8 @@ language_manager = LanguageManager()
 
 # Create the main window
 root = tk.Tk()
+img = tk.PhotoImage(data=SX_ICON_BASE64)
+root.tk.call('wm', 'iconphoto', root._w, img)
 root.title(f"Dice Mod Helper - Made by SeanConnerX0 - {VERSION}")
 
 # Retrieve the screen width and height
