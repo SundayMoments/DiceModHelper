@@ -15,6 +15,9 @@ from LocaConversion import (
     load,
     LocaFormat
 )
+
+VERSION = 'v1.3'
+
 def create_directories(output_directory, folder_name):
     directories = [
         f'{output_directory}/Localization/English',
@@ -239,7 +242,7 @@ def convert_xml_to_loca():
 
 # Create the main window
 root = tk.Tk()
-root.title("Diceset Mod Generator")
+root.title(f"Dice Mod Helper - Made by SeanConnerX0 - {VERSION}")
 
 # Retrieve the screen width and height
 screen_width = root.winfo_screenwidth()
