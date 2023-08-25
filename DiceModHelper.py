@@ -16,22 +16,40 @@ from LocaConversion import (
     LocaFormat
 )
 
+from LocalizationMap import (
+    languages,
+)
+
 VERSION = 'v1.3'
 
-def create_directories(output_directory, folder_name):
+def create_directories(output_directory, folder_name, language_cache):
+    # Common directories
     directories = [
-        f'{output_directory}/Localization/English',
         f'{output_directory}/Mods/{folder_name}',
         f'{output_directory}/Public/Game/GUI/Assets/DiceSets/{folder_name}',
         f'{output_directory}/Public/{folder_name}/CustomDice',
         f'{output_directory}/Public/{folder_name}/Game/GUI'
     ]
+
+    # Create common directories only if they don't exist
     for directory in directories:
-        try:
-            os.makedirs(directory)
-            write_to_terminal(f"Directory created: {directory}")
-        except Exception as e:
-            write_to_terminal(f"Error creating directory {directory}: {str(e)}")
+        if not os.path.exists(directory):
+            try:
+                os.makedirs(directory)
+                write_to_terminal(f"Directory created: {directory}")
+            except Exception as e:
+                write_to_terminal(f"Error creating directory {directory}: {str(e)}")
+
+    # Create directories and files for cached languages
+    for language_name, language_code in languages.items():
+        if language_code in language_cache:
+            language_directory = f'{output_directory}/Localization/{language_name}'
+            if not os.path.exists(language_directory):
+                try:
+                    os.makedirs(language_directory)
+                    write_to_terminal(f"Directory created: {language_directory}")
+                except Exception as e:
+                    write_to_terminal(f"Error creating directory for {language_name}: {str(e)}")
 
 def write_file(file_path, content):
     try:
@@ -165,19 +183,26 @@ def generate_files():
     output_directory = output_dir_var.get()
 
     # Create the folder structure
-    create_directories(output_directory, folder_name)
+    create_directories(output_directory, folder_name, language_manager.language_cache)
 
-    # Generate the content for each file
-    folder_name_xml_content = generate_folder_name_xml_content(hand_name, mod_name_game, hand_desc, mod_desc_game)
+    # Generate common files
     custom_dice_lsx_content = generate_custom_dice_lsx_content(folder_name, hand_name, hand_desc, mod_uuid)
     meta_lsx_content = generate_meta_lsx_content(author_name, mod_name, mod_desc, folder_name, mod_uuid)
     metadata_lsx_content = generate_metadata_lsx_content(folder_name)
 
-    # Create and write the content for each file
-    write_file(f'{output_directory}/Localization/English/{folder_name}.xml', folder_name_xml_content)
+    # Create and write common files
     write_file(f'{output_directory}/Public/{folder_name}/CustomDice/CustomDice.lsx', custom_dice_lsx_content)
     write_file(f'{output_directory}/Mods/{folder_name}/meta.lsx', meta_lsx_content)
     write_file(f'{output_directory}/Public/{folder_name}/Game/GUI/metadata.lsx', metadata_lsx_content)
+
+    # Generate localization files for cached languages
+    for language_name, language_code in languages.items():
+        if language_code in language_manager.language_cache:
+            # Get the cached values for the current language
+            cached_mod_name_game, cached_mod_desc_game = language_manager.language_cache[language_code]
+            folder_name_xml_content = generate_folder_name_xml_content(hand_name, cached_mod_name_game, hand_desc, cached_mod_desc_game)
+            language_directory = f'{output_directory}/Localization/{language_name}'  # Use language name
+            write_file(f'{language_directory}/{folder_name}.xml', folder_name_xml_content)
 
     # Convert the newly created XML file to .loca format
     convert_xml_to_loca()
@@ -194,7 +219,15 @@ def open_dice_sets_folder():
     subprocess.Popen(f'explorer {os.path.realpath(folder_path)}')
 
 def open_localization_folder():
-    folder_path = os.path.join(output_dir_var.get(), 'Localization', 'English')
+    cached_languages = [code for code in languages.values() if code in language_manager.language_cache]
+    
+    if len(cached_languages) == 1: # If only one language is cached, open that specific folder
+        selected_language_code = cached_languages[0]
+        selected_language = [name for name, code in languages.items() if code == selected_language_code][0]
+        folder_path = os.path.join(output_dir_var.get(), 'Localization', selected_language)  # Use selected language name
+    else: # If multiple languages are cached, open the entire Localization folder
+        folder_path = os.path.join(output_dir_var.get(), 'Localization')
+
     subprocess.Popen(f'explorer {os.path.realpath(folder_path)}')
 
 def open_dds_folder():
@@ -224,18 +257,20 @@ def update_mod_uuid():
 
 def convert_xml_to_loca(show_message=False):
     try:
-        file_path = os.path.join(output_dir_var.get(), 'Localization', 'English', f'{folder_name_var.get()}.xml')
-        xml_path = file_path
-        loca_path = file_path.replace('.xml', '.loca')
+        for language_name, language_code in languages.items():
+            if language_code in language_manager.language_cache:
+                file_path = os.path.join(output_dir_var.get(), 'Localization', language_name, f'{folder_name_var.get()}.xml')  # Use language name
+                xml_path = file_path
+                loca_path = file_path.replace('.xml', '.loca')
 
-        # Read the XML file
-        resource = load(xml_path, LocaFormat.XML)
+                # Read the XML file
+                resource = load(xml_path, LocaFormat.XML)
 
-        # Write the .loca file
-        save(resource, loca_path, LocaFormat.LOCA)
+                # Write the .loca file
+                save(resource, loca_path, LocaFormat.LOCA)
 
-        # Log the success message in the output terminal
-        write_to_terminal(f"File converted: {xml_path} to {loca_path}")
+                # Log the success message in the output terminal
+                write_to_terminal(f"File converted: {xml_path} to {loca_path}")
 
         if show_message:
             messagebox.showinfo("Success", "Converted XML to .loca successfully!")
@@ -243,6 +278,53 @@ def convert_xml_to_loca(show_message=False):
         # Display the error message in the output terminal
         write_to_terminal(f"An error occurred: {str(e)}")
         messagebox.showerror("Error", f"An error occurred: {str(e)}")
+
+language_cache = {}
+
+languages_reverse = {code: name for name, code in languages.items()}
+
+class LanguageManager:
+    def __init__(self):
+        self.ignore_text_change = False
+        self.language_cache = {}
+
+    def on_text_change(self):
+        if self.ignore_text_change:
+            return
+
+        # Get the current language code
+        current_language_code = selected_language_var.get()
+
+        # Get the current Name and Description values
+        current_name = mod_name_game_var.get()
+        current_desc = mod_desc_game_var.get()
+
+        print(f"Text change for {current_language_code}: Name = {current_name}, Desc = {current_desc}")
+
+        # Update the cache for the current language
+        self.language_cache[current_language_code] = (current_name, current_desc)
+
+    def on_language_change(self, event):
+        self.ignore_text_change = True
+
+        # Get the newly selected language code
+        new_language_code = language_combobox.get().upper()  # Make sure it's uppercase
+
+        print(f"Language change to {new_language_code}: Cached values = {self.language_cache.get(new_language_code, 'Not found')}")
+
+        # Check if the newly selected language has cached values
+        if new_language_code in self.language_cache:
+            # Restore the cached values for the selected language
+            mod_name_game_var.set(self.language_cache[new_language_code][0])
+            mod_desc_game_var.set(self.language_cache[new_language_code][1])
+        else:
+            # If no cached values for the selected language, clear the Name and Description
+            mod_name_game_var.set('')
+            mod_desc_game_var.set('')
+
+        self.ignore_text_change = False
+
+language_manager = LanguageManager()
 
 # Create the main window
 root = tk.Tk()
@@ -259,6 +341,23 @@ window_height = int(window_width * 9 / 16)  # 16:9 aspect ratio
 # Set the window size
 root.geometry(f"{window_width}x{window_height}")
 
+# Create a variable to hold the selected language
+selected_language_var = tk.StringVar(value='EN')  # Default to English (two-letter code)
+
+# Get the selected two-letter code (already in uppercase)
+selected_language_code = selected_language_var.get()
+selected_language = [key for key, value in languages.items() if value == selected_language_code][0]
+language_code = languages[selected_language]
+
+# Convert two-letter codes to uppercase
+language_codes_upper = [code.upper() for code in languages.values()]
+
+# Create a language selection combo box
+language_combobox = ttk.Combobox(root, textvariable=selected_language_var, values=language_codes_upper, width=3)
+language_combobox.bind("<<ComboboxSelected>>", language_manager.on_language_change)
+language_combobox.grid(row=0, column=0, padx=5)  # Place it at the top
+language_combobox.set("EN")  # Set default value to English (two-letter code)
+
 # Variables for the form
 folder_name_var = tk.StringVar()
 hand_name_var = tk.StringVar()
@@ -270,6 +369,10 @@ author_name_var = tk.StringVar()
 mod_name_var = tk.StringVar()
 mod_desc_var = tk.StringVar()
 output_dir_var = tk.StringVar()
+
+# Bind the text change events to the on_text_change method of the LanguageManager instance
+mod_name_game_var.trace_add("write", lambda *args: language_manager.on_text_change())
+mod_desc_game_var.trace_add("write", lambda *args: language_manager.on_text_change())
 
 # Add some padding to the root window
 root.configure(padx=10, pady=10)
