@@ -179,6 +179,9 @@ def generate_files():
     write_file(f'{output_directory}/Mods/{folder_name}/meta.lsx', meta_lsx_content)
     write_file(f'{output_directory}/Public/{folder_name}/Game/GUI/metadata.lsx', metadata_lsx_content)
 
+    # Convert the newly created XML file to .loca format
+    convert_xml_to_loca()
+
     # Assuming that messagebox is part of a GUI library like tkinter
     messagebox.showinfo("Success", "Files generated successfully!")
 
@@ -219,7 +222,7 @@ def update_handle2():
 def update_mod_uuid():
     mod_uuid_var.set(generate_guid())
 
-def convert_xml_to_loca():
+def convert_xml_to_loca(show_message=False):
     try:
         file_path = os.path.join(output_dir_var.get(), 'Localization', 'English', f'{folder_name_var.get()}.xml')
         xml_path = file_path
@@ -234,7 +237,8 @@ def convert_xml_to_loca():
         # Log the success message in the output terminal
         write_to_terminal(f"File converted: {xml_path} to {loca_path}")
 
-        messagebox.showinfo("Success", "Converted XML to .loca successfully!")
+        if show_message:
+            messagebox.showinfo("Success", "Converted XML to .loca successfully!")
     except Exception as e:
         # Display the error message in the output terminal
         write_to_terminal(f"An error occurred: {str(e)}")
@@ -320,7 +324,8 @@ generate_button.grid(row=row, column=1, pady=10)  # Centered the Generate button
 row += 1
 ttk.Button(root, text="Open Output Directory", command=open_dice_sets_folder).grid(row=row, column=0, padx=5)
 ttk.Button(root, text="Open Localization Directory", command=open_localization_folder).grid(row=row, column=1, padx=5)
-ttk.Button(root, text="Convert XML to .loca", command=convert_xml_to_loca).grid(row=row, column=2, padx=5)
+# Modify the command to pass True for the show_message parameter
+ttk.Button(root, text="Convert XML to .loca", command=lambda: convert_xml_to_loca(True)).grid(row=row, column=2, padx=5)
 
 row += 1
 ttk.Button(root, text="Open .DDS Directory", command=open_dds_folder).grid(row=row, column=1, padx=5)
