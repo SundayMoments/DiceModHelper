@@ -3,13 +3,18 @@ languages = {
     'French': 'FR',
     'German': 'DE',
     'Polish': 'PL',
-    'Ukrainian': 'UK',
+    'Ukrainian': 'UA',
     'Italian': 'IT',
     'Turkish': 'TR',
+    'Spanish': 'ES',
+    'LatinSpanish': 'LAS',
     'Portuguese': 'PT',
-    'Chinese': 'ZH',
+    'BrazilianPortuguese': 'PT-BR',
+    'Chinese': 'ZH-HANS',
+    'ChineseTraditional': 'ZH-HANT',
     'Russian': 'RU'
 }
+
 
 sorted_languages = dict(sorted(languages.items(), key=lambda x: (x[0] != 'English', x[1])))
 languages = sorted_languages
