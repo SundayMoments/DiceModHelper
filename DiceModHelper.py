@@ -328,7 +328,6 @@ language_manager = LanguageManager()
 
 # Create the main window
 root = tk.Tk()
-root.iconbitmap('SX-Icon.ico')
 root.title(f"Dice Mod Helper - Made by SeanConnerX0 - {VERSION}")
 
 # Retrieve the screen width and height
