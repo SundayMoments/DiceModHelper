@@ -214,7 +214,23 @@ def generate_files():
 
 def select_output_dir():
     folder_selected = filedialog.askdirectory()
+    
+    # Check if the selected folder still exists
+    if not os.path.exists(folder_selected):
+        parent_folder = os.path.dirname(folder_selected)
+        if parent_folder:  # Check if a parent directory exists
+            write_to_terminal(f"Warning: The selected directory {folder_selected} does not exist. Automatically switching to the parent directory: {parent_folder}.")
+            folder_selected = parent_folder  # Use the parent directory
+        else:
+            write_to_terminal(f"Warning: The selected directory {folder_selected} does not exist, and no parent directory is available.")
+            return
+
     output_dir_var.set(folder_selected)
+    
+    # Check if the directory is empty
+    if folder_selected:  # Check if a folder was actually selected
+        if os.listdir(folder_selected):  # Check if folder is empty
+            write_to_terminal(f"Warning: The directory {folder_selected} is not empty.")
 
 def open_dice_sets_folder():
     folder_path = output_dir_var.get()
