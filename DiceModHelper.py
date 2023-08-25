@@ -22,7 +22,7 @@ from LocalizationMap import (
 
 from SX_Icon_base64 import SX_ICON_BASE64
 
-VERSION = 'v2.0'
+VERSION = 'v2.1.1'
 
 def create_directories(output_directory, folder_name, language_cache):
     # Common directories
